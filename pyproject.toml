@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "compressed-sensing"
+name = "compressed_sensing"
 version = "0.1.0"
 description = "Educational repo oriented to showcasing how compressed sensing works"
 authors = ["Iñaki Rabanillo <lanza241@gmail.com>"]

@@ -76,22 +76,56 @@ def get_tangent(a: float, b: float, ct: np.ndarray, phi: float, color: str):
     p = ct[1] - n1 * ct[0] - n2 * (num / den)
     return DashedLine(start=np.array([- n1 * p, 0, 0]), end=np.array([0, p, 0]), color=color)
 
+def get_centered_segment(m: float, ct: np.ndarray, length: float):
+    delta_x = length / math.sqrt(1 + m ** 2)
+    delta_y = m * delta_x
+    start = ct - np.array([delta_x, delta_y, 0])
+    end = ct + np.array([delta_x, delta_y, 0])
+    return (start, end)
+
+def get_point_tangency(a: float, b: float, ct: np.ndarray, phi: float):
+    n1 = np.sign(ct[0] * ct[1])
+    q = (math.cos(phi) + n1 * math.sin(phi)) / (n1 * math.cos(phi) -  math.sin(phi))
+    x0 = a ** 2 * q / math.sqrt((a * q) ** 2 + b ** 2)
+    y0 = b ** 2 / math.sqrt((a * q) ** 2 + b ** 2)
+    x_rot = x0 * math.cos(phi) - y0 * math.sin(phi)
+    y_rot = x0 * math.sin(phi) + y0 * math.cos(phi)
+    x_shift = x_rot + ct[0]
+    y_shift = y_rot + ct[1]
+    return np.array([x_shift, y_shift, 0])
+
+def get_tangent(a: float, b: float, ct: np.ndarray, phi: float, color: str):
+    n1 = - np.sign(ct[0] * ct[1])
+    m = (n1 * math.cos(phi) - math.sin(phi)) / (math.cos(phi) + n1 *  math.sin(phi))
+    num = math.sqrt((m * a) ** 2 + b ** 2)
+    den = math.cos(phi) - m * math.sin(phi)
+    if ct[1] >= 0:
+        n2 = abs(den) / den
+    else:
+        n2 = -abs(den) / den
+    p = ct[1] - n1 * ct[0] - n2 * (num / den)
+    # line is of the form: y = -n1 * x + p
+    pt_tangency = get_point_tangency(a=a, b=b, ct=ct, phi=phi)
+    start, end = get_centered_segment(m=-n1, ct=pt_tangency, length=1)
+    return DashedLine(start=start, end=end, color=color), Dot(pt_tangency, color=color)
+    # return DashedLine(start=np.array([- n1 * p, 0, 0]), end=np.array([0, p, 0]), color=color)
+
 def get_l2_ball_with_tangent(a: float, b: float, ct: np.ndarray, phi: float, color_ellipse: str, color_tangent: str):
     ellipse = get_l2_ball(a=a, b=b, ct=ct, phi=phi, color=color_ellipse)
-    tangent = get_tangent(a=a, b=b, ct=ct, phi=phi, color=color_tangent)
-    return VGroup(ellipse, tangent)
+    tangent, pt_tangency = get_tangent(a=a, b=b, ct=ct, phi=phi, color=color_tangent)
+    return VGroup(ellipse, tangent, pt_tangency)
 
 def get_l1_ball(l: float, color: str):
     return Rectangle(width=l, height=l, color=color).rotate(PI/4)
 
 def get_l2_ball_scalled_tangent_to_l1_ball(a: float, b: float, ct: np.ndarray, phi: float, l: float, color: str):
-    n1 = np.sign(ct[0] * ct[1])
+    n1 = - np.sign(ct[0] * ct[1])
     n2 = np.sign(ct[1])
     m = (n1 * math.cos(phi) - math.sin(phi)) / (math.cos(phi) + n1 * math.sin(phi))
     den = math.sqrt((m * a) ** 2 + b ** 2)
     num = (n2 * l - ct[1] + n1 * ct[0]) * (math.cos(phi) - m * math.sin(phi))
-    s = num / den
-    return Ellipse(width=2*a/s, height=2*b/s, color=color).rotate(phi).shift(ct)
+    s = num / den      
+    return Ellipse(width=2*a*s, height=2*b*s, color=color).rotate(phi).shift(ct)
 
 class CompressedSensing(Scene):
     def construct(self):
@@ -108,16 +142,16 @@ class CompressedSensing(Scene):
         ]
 
         phi = PI/3
-        l = math.sqrt(2)
+        l = 1
         l2_balls_and_tangents, scaled_ellipses = [], []
         for s in np.linspace(1, 2, 1):
             for ct in cts:
                 l2_balls_and_tangents.append(get_l2_ball_with_tangent(a=s * a, b=s * b, ct=ct, phi=phi, color_ellipse=RED, color_tangent=GREEN))
-                # scaled_ellipses.append(get_l2_ball_scalled_tangent_to_l1_ball(a=a, b=b, ct=ct, phi=phi, l=l, color=YELLOW))
+                scaled_ellipses.append(get_l2_ball_scalled_tangent_to_l1_ball(a=a, b=b, ct=ct, phi=phi, l=l, color=YELLOW))
         l2_balls_and_tangents = VGroup(*l2_balls_and_tangents)
         scaled_ellipses = VGroup(*scaled_ellipses)
-        l1_ball = get_l1_ball(l=l, color=BLUE)
+        l1_ball = get_l1_ball(l=math.sqrt(2*l), color=BLUE)
 
         # Add the axes and the ellipse to the scene
-        self.play(ShowCreation(l2_balls_and_tangents), ShowCreation(l1_ball)) #, ShowCreation(scaled_ellipses))
+        self.play(ShowCreation(l2_balls_and_tangents), ShowCreation(l1_ball), ShowCreation(scaled_ellipses))
         self.wait()
