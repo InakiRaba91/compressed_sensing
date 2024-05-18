@@ -1,37 +1,8 @@
 import numpy as np
-from manimlib import Ellipse as EllipseM, Dot as DotM, DashedLine as DashedLineM, Rectangle as RectangleM
-from manimlib import PI, VGroup, ShowCreation, Scene, NumberPlane, BLUE, RED, GREEN, YELLOW
-from compressed_sensing.geometry import Ellipse, Line, Point
-
-def get_l2_ball(ellipse: Ellipse, color: str) -> EllipseM:
-    a, b = ellipse.axes.x, ellipse.axes.y
-    ct = np.array([ellipse.center.x, ellipse.center.y, 0])
-    return EllipseM(width=2*a, height=2*b, color=color).rotate(np.deg2rad(-ellipse.angle)).shift(ct)
-
-def get_centered_segment(line: Line, ct: Point, length: float, color: str) -> DashedLineM:
-    ct_3d = np.array([ct.x, ct.y, 0])
-    m = - line.a / line.b
-    delta_x = length / np.sqrt(1 + m ** 2)
-    delta_y = m * delta_x
-    start = ct_3d - np.array([delta_x, delta_y, 0])
-    end = ct_3d + np.array([delta_x, delta_y, 0])
-    return DashedLineM(start=start, end=end, color=color)
-
-def get_l2_ball_with_tangent(ellipse: Ellipse, color_ellipse: str, color_tangent: str) -> VGroup:
-    l2_ball = get_l2_ball(ellipse=ellipse, color=color_ellipse)
-    if (ellipse.center.y == 0) or (ellipse.center.x == 0):
-        raise ValueError("The ellipse is in an axis, the tangent is not defined.")
-    else:
-        slope = - np.sign(ellipse.center.y / ellipse.center.x)
-        (line1, pt1), (line2, pt2) = ellipse.tangent(slope=slope)
-        # grab the one closest to the origin
-        line, pt = (line1, pt1) if pt1.length() < pt2.length() else (line2, pt2)
-        tangent = get_centered_segment(line=line, ct=pt, length=1, color=color_tangent)
-        pt_tangency = DotM(np.array([pt.x, pt.y, 0]), color=color_tangent)
-        return VGroup(l2_ball, tangent, pt_tangency)
-
-def get_l1_ball(l: float, color: str):
-    return RectangleM(width=l, height=l, color=color).rotate(PI/4)
+from manimlib import Line as LineM
+from manimlib import PI, VGroup, ShowCreation, FadeOut, Scene, NumberPlane, ValueTracker
+from manimlib import always_redraw, linear, BLUE, RED, GREEN, ORANGE, LEFT, RIGHT, UP, DOWN
+from compressed_sensing.geometry import Ellipse, Point, get_l2_ball_with_tangent
 
 class Tangency(Scene):
     def construct(self):
@@ -39,23 +10,41 @@ class Tangency(Scene):
         self.add(plane)
 
         # Create an ellipse
-        a, b = 1, 0.5
-        cts = [
-            Point(x=1, y=1),
-            Point(x=-2, y=2),
-            Point(x=-2, y=-2),
-            Point(x=2, y=-2),
-        ]
-        angle = 15
-        l = 1
-        l2_balls_and_tangents = []
-        for s in np.linspace(1, 2, 1):
-            for ct in cts:
-                ellipse = Ellipse(axes=Point(x=s*a, y=s*b), center=ct, angle=angle)
-                l2_balls_and_tangents.append(get_l2_ball_with_tangent(ellipse=ellipse, color_ellipse=RED, color_tangent=GREEN))
-        l2_balls_and_tangents = VGroup(*l2_balls_and_tangents)
-        l1_ball = get_l1_ball(l=np.sqrt(2*l), color=BLUE)
+        s_start, s_end = 0.5, 2
+        s = ValueTracker(s_start)
+        a, b = 1, 1.5
+        ct = Point(x=3, y=2)
+        angle = 30
+        l2_group = always_redraw(
+            lambda: VGroup(*get_l2_ball_with_tangent(
+                ellipse=Ellipse(axes=Point(x=s.get_value()*a, y=s.get_value()*b), center=ct, angle=angle), 
+                color_ellipse=RED, 
+                color_tangent=GREEN
+            ))
+        )
 
-        # Add the axes and the ellipse to the scene
-        self.play(ShowCreation(l2_balls_and_tangents), ShowCreation(l1_ball))
+        ct_3d = np.array([ct.x, ct.y, 0])
+        x_mark = VGroup(
+            LineM(ct_3d + LEFT/8 + UP/8, ct_3d + RIGHT/8 + DOWN/8, color=ORANGE),
+            LineM(ct_3d + LEFT/8 + DOWN/8, ct_3d + RIGHT/8 + UP/8, color=ORANGE),
+        )
+
+
+        start_ellipse = Ellipse(axes=Point(x=s_start*a, y=s_start*b), center=ct, angle=angle)
+        end_ellipse = Ellipse(axes=Point(x=s_end*a, y=s_end*b), center=ct, angle=angle)
+        start_l2_ball = start_ellipse.to_manim(color=RED)
+        _, _, start = get_l2_ball_with_tangent(ellipse=start_ellipse, color_tangent=BLUE)
+        _, _, end = get_l2_ball_with_tangent(ellipse=end_ellipse)
+        secant = LineM(start=start.get_center(), end=end.get_center(), color=BLUE)
+
+        self.play(ShowCreation(x_mark), ShowCreation(start_l2_ball), ShowCreation(start))
+        self.wait()
+        self.add(l2_group)
+        self.play(FadeOut(start_l2_ball), run_time=0.1)
+        self.play(
+            s.animate.set_value(s_end),
+            ShowCreation(secant),
+            run_time=3, 
+            rate_func=linear,
+        )
         self.wait()

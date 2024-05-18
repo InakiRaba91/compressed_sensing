@@ -12,6 +12,9 @@ manimgl = "^1.6.1"
 numpy = "1.24"
 
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

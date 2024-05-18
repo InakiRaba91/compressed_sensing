@@ -6,6 +6,7 @@ from .conic import check_symmetric_and_non_degenerate
 from .exceptions import InvalidConicMatrixEllipseException, PointNotInEllipseException
 from .line import Line
 from .point import Point
+from manimlib import Ellipse as EllipseM, WHITE
 
 
 class Ellipse:
@@ -319,7 +320,12 @@ class Ellipse:
     
         return ((line1, pt1), (line2, pt2))
 
-
+    def get_scaled_version_through_point(self, pt: Point) -> "Ellipse":
+        a, b = self._axes.x, self._axes.y
+        # apply rigid transform to center the ellipse and align it with xy-axes
+        pt = (pt - self._center).rotate(angle=self._angle)
+        s = np.sqrt((pt.x**2) / (a**2) + (pt.y**2) / (b**2))
+        return Ellipse(center=self._center, axes=Point(x=s*a, y=s*b), angle=self._angle)
     
     def contains_pt(self, pt: Point, tol: float = 1e-6) -> bool:
         """Determines whether a point belongs to an ellipse or not
@@ -390,5 +396,11 @@ class Ellipse:
         rotated_pt = pt_rigid_ellipse.rotate(angle=self._angle)
         return rotated_pt + self._center
 
+    def to_manim(self, color: str = WHITE):
+        a, b = self.axes.x, self.axes.y
+        ct = np.array([self.center.x, self.center.y, 0])
+        angle = np.deg2rad(-self.angle)
+        return EllipseM(width=2*a, height=2*b, color=color).rotate(angle).shift(ct)
+    
     def __repr__(self):
         return f"Ellipse(center={self.center}, axes={self.axes}, angle={self.angle})"
