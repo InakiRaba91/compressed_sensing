@@ -1,11 +1,11 @@
-
 from typing import Any, Union
 
 import numpy as np
+from manimlib import WHITE
+from manimlib import DashedLine as DashedLineM
 
 from .exceptions import LineFromEqualPointsException
 from .point import Point
-from manimlib import Line as LineM, DashedLine as DashedLineM, WHITE
 
 
 class LineSegment:
@@ -97,11 +97,11 @@ class LineSegment:
         Returns:
             LineSegment starting at the given point and having the given length with given slope
         """
-        delta_x = length / np.sqrt(1 + slope ** 2)
+        delta_x = length / np.sqrt(1 + slope**2)
         delta_y = slope * delta_x
         delta = Point(x=delta_x, y=delta_y)
-        return cls(pt1=pt - delta, pt2=pt+delta)
-        
+        return cls(pt1=pt - delta, pt2=pt + delta)
+
     def scale(self, pt: Point) -> "LineSegment":
         """Provides the 2D segment after applying a scaling of the 2D space with
         the scaling given in each coordinate of point
@@ -122,8 +122,8 @@ class LineSegment:
             pt1=Point(x=self.pt1.x * scale_x, y=self.pt1.y * scale_y),
             pt2=Point(x=self.pt2.x * scale_x, y=self.pt2.y * scale_y),
         )
-    
-    def to_manim(self, color: str = WHITE, type_line = DashedLineM):
+
+    def to_manim(self, color: str = WHITE, type_line=DashedLineM):
         pt1 = np.array([self.pt1.x, self.pt1.y, 0])
         pt2 = np.array([self.pt2.x, self.pt2.y, 0])
         return type_line(start=pt1, end=pt2, color=color)

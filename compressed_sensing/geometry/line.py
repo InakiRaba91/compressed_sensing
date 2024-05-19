@@ -202,7 +202,7 @@ class Line:
     def shift(self, pt_shift: Point) -> Line:
         """Shift point in the direction of the vector from the origin of
         coordinates to the given point
-        
+
         Args:
             pt_shift: Point determining the shift of the line
         Returns:

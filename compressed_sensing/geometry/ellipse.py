@@ -1,12 +1,13 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
+from manimlib import WHITE
+from manimlib import Ellipse as EllipseM
 
 from .conic import check_symmetric_and_non_degenerate
 from .exceptions import InvalidConicMatrixEllipseException, PointNotInEllipseException
 from .line import Line
 from .point import Point
-from manimlib import Ellipse as EllipseM, WHITE
 
 
 class Ellipse:
@@ -256,12 +257,12 @@ class Ellipse:
         1. Rotate the line by the angle of the ellipse
         y = x * (m * cos(angle) + sin(angle)) / (cos(angle) - m * sin(angle)) +- n1 / (cos(angle) - m * sin(angle))
         y = x * m2 +- n2
-        where 
+        where
         m2 = (m * cos(angle) + sin(angle)) / (cos(angle) - m * sin(angle))
         n2 = n1 / (cos(angle) - m* sin(angle))
 
         2. Shift the line by the center of the ellipse
-        y = x * m2 +- n2 + ct_y - m2 * ct_x 
+        y = x * m2 +- n2 + ct_y - m2 * ct_x
         y = x * m2 + n3
         where
         n3 = +- n2 + ct_y - m2 * ct_x
@@ -290,14 +291,16 @@ class Ellipse:
             Tuple with two lines and the corresponding points of tangency
         """
         # Return center if ellipse collapsed to a point
-        if abs(self.axes.x) < 1e-6 or abs(self.axes.y) < 1e-6: 
+        if abs(self.axes.x) < 1e-6 or abs(self.axes.y) < 1e-6:
             line = Line(a=-slope, b=1, c=self.center.x - slope * self.center.y)
             pt = self.center
-            return tuple((line, pt), )
-            
+            return tuple(
+                (line, pt),
+            )
+
         a, b = self._axes.x, self._axes.y
-        angle = - np.deg2rad(self._angle)
-        
+        angle = -np.deg2rad(self._angle)
+
         m = (slope * np.cos(angle) - np.sin(angle)) / (np.cos(angle) + slope * np.sin(angle))
         n1 = np.sqrt((a**2) * (m**2) + (b**2))
         m2 = (m * np.cos(angle) + np.sin(angle)) / (np.cos(angle) - m * np.sin(angle))
@@ -307,12 +310,12 @@ class Ellipse:
 
         line1 = Line(a=m2, b=-1, c=n3_1)
         line2 = Line(a=m2, b=-1, c=n3_2)
-        
+
         line_centered_aligned = line1.shift(pt_shift=-self._center).rotate(angle=self._angle)
         # We write it in form y = mx + c
         m = -line_centered_aligned.a / line_centered_aligned.b
         x0 = a**2 * m / np.sqrt(a**2 * m**2 + b**2)
-        y0 = - b**2 / np.sqrt(a**2 * m**2 + b**2) * np.sign(x0) * np.sign(m)
+        y0 = -(b**2) / np.sqrt(a**2 * m**2 + b**2) * np.sign(x0) * np.sign(m)
         pt1 = Point(x=x0, y=y0)
         pt2 = Point(x=-x0, y=-y0)
 
@@ -322,8 +325,8 @@ class Ellipse:
 
         # group them by distance to the origin
         pt1, pt2 = (pt1, pt2) if pt1.length() < pt2.length() else (pt2, pt1)
-        line1, line2 = (line1, line2) if abs(line1.c/line1.a) < abs(line2.c/line2.a) else (line2, line1)
-    
+        line1, line2 = (line1, line2) if abs(line1.c / line1.a) < abs(line2.c / line2.a) else (line2, line1)
+
         return ((line1, pt1), (line2, pt2))
 
     def get_scaled_version_through_point(self, pt: Point) -> "Ellipse":
@@ -331,8 +334,8 @@ class Ellipse:
         # apply rigid transform to center the ellipse and align it with xy-axes
         pt = (pt - self._center).rotate(angle=self._angle)
         s = np.sqrt((pt.x**2) / (a**2) + (pt.y**2) / (b**2))
-        return Ellipse(center=self._center, axes=Point(x=s*a, y=s*b), angle=self._angle)
-    
+        return Ellipse(center=self._center, axes=Point(x=s * a, y=s * b), angle=self._angle)
+
     def contains_pt(self, pt: Point, tol: float = 1e-6) -> bool:
         """Determines whether a point belongs to an ellipse or not
         The points that belong to the centered&aligned ellipse satisfies
@@ -402,11 +405,15 @@ class Ellipse:
         rotated_pt = pt_rigid_ellipse.rotate(angle=self._angle)
         return rotated_pt + self._center
 
-    def to_manim(self, color: str = WHITE):
+    def to_manim(self, color: str = WHITE, fill_color: Optional[str] = None, fill_opacity: float = 0.0):
         a, b = self.axes.x, self.axes.y
         ct = np.array([self.center.x, self.center.y, 0])
         angle = np.deg2rad(-self.angle)
-        return EllipseM(width=2*a, height=2*b, color=color).rotate(angle).shift(ct)
-    
+        return (
+            EllipseM(width=2 * a, height=2 * b, color=color, fill_color=fill_color, fill_opacity=fill_opacity)
+            .rotate(angle)
+            .shift(ct)
+        )
+
     def __repr__(self):
         return f"Ellipse(center={self.center}, axes={self.axes}, angle={self.angle})"

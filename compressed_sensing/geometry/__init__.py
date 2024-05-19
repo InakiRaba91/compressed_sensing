@@ -1,4 +1,4 @@
-from .point import Point
+from .ellipse import Ellipse
 from .line import Line
 from .line_segment import LineSegment
-from .ellipse import Ellipse
+from .point import Point

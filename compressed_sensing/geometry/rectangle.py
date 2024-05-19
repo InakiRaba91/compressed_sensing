@@ -1,12 +1,10 @@
-from typing import List, Tuple
+from typing import Optional
 
 import numpy as np
+from manimlib import WHITE
+from manimlib import Rectangle as RectangleM
 
-from .conic import check_symmetric_and_non_degenerate
-from .exceptions import InvalidConicMatrixEllipseException, PointNotInEllipseException
-from .line import Line
 from .point import Point
-from manimlib import Rectangle as RectangleM, WHITE
 
 
 class Rectangle:
@@ -49,11 +47,13 @@ class Rectangle:
         """
         return Rectangle(center=self._center + pt, axes=self._axes, angle=self._angle)
 
-    def to_manim(self, color: str = WHITE):
+    def to_manim(self, color: str = WHITE, fill_color: Optional[str] = None, fill_opacity: float = 0.0):
         a, b = self.axes.x, self.axes.y
         ct = np.array([self.center.x, self.center.y, 0])
         angle = np.deg2rad(-self.angle)
-        return RectangleM(width=a, height=b, color=color).rotate(angle).shift(ct)
-    
+        return (
+            RectangleM(width=a, height=b, color=color, fill_color=fill_color, fill_opacity=fill_opacity).rotate(angle).shift(ct)
+        )
+
     def __repr__(self):
         return f"Ellipse(center={self.center}, axes={self.axes}, angle={self.angle})"
