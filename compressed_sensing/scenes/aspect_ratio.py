@@ -7,36 +7,36 @@ from compressed_sensing.geometry.rectangle import Rectangle
 
 
 
-def get_center(t: float) -> Point:
-    """Divide in six parts the interval [0, 1]"""
-
+def get_axes(t: float) -> Point:
     if t < 1/6:
         t_s, t_e = 0, 1/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 1, 1
+        a_s, b_s = 1, 0.5 
+        a_e, b_e = 1, 2
     elif t < 2/6:
         t_s, t_e = 1/6, 2/6
-        x_s, y_s = 1, 1
-        x_e, y_e = 2, 2
+        a_s, b_s = 1, 2
+        a_e, b_e = 1, 0.1
     elif t < 3/6:
         t_s, t_e = 2/6, 3/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 2, 0
+        a_s, b_s = 1, 0.1
+        a_e, b_e = 1, 0.5
     elif t < 4/6:
         t_s, t_e = 3/6, 4/6
-        x_s, y_s = 2, 0
-        x_e, y_e = 2, 2
+        a_s, b_s = 1, 0.5
+        a_e, b_e = 3, 0.5
     elif t < 5/6:
         t_s, t_e = 4/6, 5/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 0, 2
+        a_s, b_s = 3, 0.5
+        a_e, b_e = 0.1, 0.5
     else:
         t_s, t_e = 5/6, 1
-        x_s, y_s = 0, 2
-        x_e, y_e = 2, 2    
-    return Point(x=x_s + (x_e - x_s) * (t - t_s) / (t_e - t_s), y=y_s + (y_e - y_s) * (t - t_s) / (t_e - t_s))
+        a_s, b_s = 0.1, 0.5
+        a_e, b_e = 1, 0.5  
+    pt = Point(x=a_s + (a_e - a_s) * (t - t_s) / (t_e - t_s), y=b_s + (b_e - b_s) * (t - t_s) / (t_e - t_s))
+    print(pt)
+    return pt
 
-class Shift(Scene):
+class AspectRatio(Scene):
     def construct(self):
         plane = NumberPlane()
         self.add(plane)
@@ -44,7 +44,7 @@ class Shift(Scene):
         # Create an ellipse
         t_start, t_end = 0, 1
         t = ValueTracker(t_start)
-        axes = Point(x=1, y=0.5)
+        center = Point(x=2, y=2)
         angle = -np.rad2deg(PI/3)
 
         l = 1
@@ -54,7 +54,7 @@ class Shift(Scene):
 
         l2_group = always_redraw(
             lambda: get_set_concentric_l2_balls_with_tangent_and_center(
-                ellipse=Ellipse(axes=axes, center=get_center(t=t.get_value()), angle=angle), 
+                ellipse=Ellipse(axes=get_axes(t=t.get_value()), center=center, angle=angle), 
                 l=l, 
                 color_concentric=RED, 
                 color_tangent=GREEN, 
@@ -68,7 +68,7 @@ class Shift(Scene):
         self.add(l2_group)
         self.play(
             t.animate.set_value(t_end),
-            run_time=24, 
+            run_time=20, 
             rate_func=linear,
         )
         self.wait()

@@ -7,36 +7,12 @@ from compressed_sensing.geometry.rectangle import Rectangle
 
 
 
-def get_center(t: float) -> Point:
-    """Divide in six parts the interval [0, 1]"""
+def get_angle(t: float) -> Point:
+    angle_s = -np.rad2deg(PI/3)
+    angle_e = -np.rad2deg(PI/3 + PI)
+    return angle_s + (angle_e - angle_s) * t
 
-    if t < 1/6:
-        t_s, t_e = 0, 1/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 1, 1
-    elif t < 2/6:
-        t_s, t_e = 1/6, 2/6
-        x_s, y_s = 1, 1
-        x_e, y_e = 2, 2
-    elif t < 3/6:
-        t_s, t_e = 2/6, 3/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 2, 0
-    elif t < 4/6:
-        t_s, t_e = 3/6, 4/6
-        x_s, y_s = 2, 0
-        x_e, y_e = 2, 2
-    elif t < 5/6:
-        t_s, t_e = 4/6, 5/6
-        x_s, y_s = 2, 2
-        x_e, y_e = 0, 2
-    else:
-        t_s, t_e = 5/6, 1
-        x_s, y_s = 0, 2
-        x_e, y_e = 2, 2    
-    return Point(x=x_s + (x_e - x_s) * (t - t_s) / (t_e - t_s), y=y_s + (y_e - y_s) * (t - t_s) / (t_e - t_s))
-
-class Shift(Scene):
+class Rotation(Scene):
     def construct(self):
         plane = NumberPlane()
         self.add(plane)
@@ -44,8 +20,8 @@ class Shift(Scene):
         # Create an ellipse
         t_start, t_end = 0, 1
         t = ValueTracker(t_start)
+        center = Point(x=2, y=2)
         axes = Point(x=1, y=0.5)
-        angle = -np.rad2deg(PI/3)
 
         l = 1
         l1_ball = Rectangle(center=Point(x=0, y=0), axes=Point(x=np.sqrt(2*l), y=np.sqrt(2*l)), angle=45).to_manim(color=BLUE)
@@ -54,7 +30,7 @@ class Shift(Scene):
 
         l2_group = always_redraw(
             lambda: get_set_concentric_l2_balls_with_tangent_and_center(
-                ellipse=Ellipse(axes=axes, center=get_center(t=t.get_value()), angle=angle), 
+                ellipse=Ellipse(axes=axes, center=center, angle=get_angle(t=t.get_value())), 
                 l=l, 
                 color_concentric=RED, 
                 color_tangent=GREEN, 
@@ -68,7 +44,7 @@ class Shift(Scene):
         self.add(l2_group)
         self.play(
             t.animate.set_value(t_end),
-            run_time=24, 
+            run_time=10, 
             rate_func=linear,
         )
         self.wait()

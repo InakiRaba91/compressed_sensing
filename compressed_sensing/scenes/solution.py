@@ -1,7 +1,8 @@
 import numpy as np
 from manimlib import PI, VGroup, ShowCreation, Scene, NumberPlane, Tex
 from manimlib import BLUE, RED, GREEN, WHITE, LEFT, RIGHT, UP
-from compressed_sensing.geometry import Ellipse, Point, get_l2_ball_with_tangent, get_ellipse_scalled_tangent_to_l1_ball
+from compressed_sensing.geometry import Ellipse, Point
+from compressed_sensing.geometry.utils import get_l2_ball_from_set_tangent_to_l1_ball, get_ellipse_scalled_tangent_to_l1_ball
 from compressed_sensing.geometry.rectangle import Rectangle
 
 
@@ -17,8 +18,8 @@ class Solution(Scene):
         l = 1
         l2_balls = []
         base_ellipse = Ellipse(axes=axes, center=center, angle=angle)
-        tangent_ellipse = get_ellipse_scalled_tangent_to_l1_ball(ellipse=base_ellipse, l=l, color=WHITE)
-        _, _, pt_tangency = get_l2_ball_with_tangent(ellipse=tangent_ellipse, color_ellipse=RED, color_tangent=GREEN)
+        tangent_ellipse = get_ellipse_scalled_tangent_to_l1_ball(ellipse=base_ellipse, l=l)
+        _, pt_tangency = get_l2_ball_from_set_tangent_to_l1_ball(ellipse=tangent_ellipse, l=l, color_ellipse=RED, color_tangent=GREEN)
         a, b = tangent_ellipse.axes.x, tangent_ellipse.axes.y
         l2_balls = [Ellipse(axes=Point(x=s*a, y=s*b), center=center, angle=angle).to_manim(color=RED) for s in (0.5, 0.75, 1)]
         l2_balls = VGroup(*l2_balls)

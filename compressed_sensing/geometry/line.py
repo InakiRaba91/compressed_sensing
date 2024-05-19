@@ -210,31 +210,3 @@ class Line:
         """
         # addition will verify both point and line are in the same domain
         return self + pt_shift
-
-    def is_in_greater_half_plane(self, pt: Point) -> bool:
-        """Checks if a point belongs to the half-plane defined by the inequality ax+by+c>0
-        The following two lines are equivalent ax+by+c=0, -ax-by-c=0.
-        However, a line divides the 2D space in two half-planes, so we will
-        use the convention that by default, the half plane a line refers to is
-        defined by the inequality ax+by+c>0. This will become handy when defining an
-        arc as the intersection between a half plane and an ellipse
-        The line intersects with the axes at (0, -c/a) and (-c/b, 0).
-        Our convention states that the half plane is in the direction given
-        by thenormal vector:
-        [  0 ]   [-c/b]
-        [-c/a] x [  0 ]
-        [  1 ]   [  1 ]
-        Thus, the aformentioned equivalent
-        lines define two opposite half planes
-        1) ax+by+c>0
-        2) -ax-by-c>0 => ax+by+c<0
-        Another way to interpret this is using normal vectors. A line ax+by+c=0 has
-        two perpendicular normal vectors (c/b, c/a) and (-c/b, -c/a). We will use
-        the convention that the line parametrizes the half plane in the direction
-        of the first one. So negating the line would have the opposite normal vector.
-        Args:
-            pt: Point to check whether it belongs to the half plane or not
-        Returns:
-            boolean indicating the point belongs to half plane defined by greater inequality
-        """
-        return self.to_array().dot(pt.to_homogeneous()) > 0

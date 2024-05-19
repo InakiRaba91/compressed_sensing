@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Union
 import numpy as np
+from manimlib import Dot as DotM
 
 
 class Point:
@@ -189,3 +190,14 @@ class Point:
         """
         assert len(pt_homogeneous) == 3, pt_homogeneous
         return cls(x=pt_homogeneous[0] / pt_homogeneous[2], y=pt_homogeneous[1] / pt_homogeneous[2])
+
+    def to_manim(self, color: str = "WHITE") -> Any:
+        """Converts to manim point
+
+        Args:
+            color: str indicating the color of the point
+
+        Returns:
+            DotM manim point
+        """
+        return DotM(np.array([self.x, self.y, 0]), color=color)

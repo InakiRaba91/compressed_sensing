@@ -2,7 +2,8 @@ import numpy as np
 from manimlib import Line as LineM
 from manimlib import PI, VGroup, ShowCreation, FadeOut, Scene, NumberPlane, ValueTracker
 from manimlib import always_redraw, linear, BLUE, RED, GREEN, ORANGE, LEFT, RIGHT, UP, DOWN
-from compressed_sensing.geometry import Ellipse, Point, get_l2_ball_with_tangent
+from compressed_sensing.geometry import Ellipse, Point
+from compressed_sensing.geometry.utils import get_l2_ball_with_tangent_closest_to_origin
 
 class Tangency(Scene):
     def construct(self):
@@ -16,8 +17,9 @@ class Tangency(Scene):
         ct = Point(x=3, y=2)
         angle = 30
         l2_group = always_redraw(
-            lambda: VGroup(*get_l2_ball_with_tangent(
+            lambda: VGroup(*get_l2_ball_with_tangent_closest_to_origin(
                 ellipse=Ellipse(axes=Point(x=s.get_value()*a, y=s.get_value()*b), center=ct, angle=angle), 
+                slope=-1,
                 color_ellipse=RED, 
                 color_tangent=GREEN
             ))
@@ -33,8 +35,8 @@ class Tangency(Scene):
         start_ellipse = Ellipse(axes=Point(x=s_start*a, y=s_start*b), center=ct, angle=angle)
         end_ellipse = Ellipse(axes=Point(x=s_end*a, y=s_end*b), center=ct, angle=angle)
         start_l2_ball = start_ellipse.to_manim(color=RED)
-        _, _, start = get_l2_ball_with_tangent(ellipse=start_ellipse, color_tangent=BLUE)
-        _, _, end = get_l2_ball_with_tangent(ellipse=end_ellipse)
+        _, _, start = get_l2_ball_with_tangent_closest_to_origin(ellipse=start_ellipse, slope=-1, color_tangent=BLUE)
+        _, _, end = get_l2_ball_with_tangent_closest_to_origin(ellipse=end_ellipse, slope=-1)
         secant = LineM(start=start.get_center(), end=end.get_center(), color=BLUE)
 
         self.play(ShowCreation(x_mark), ShowCreation(start_l2_ball), ShowCreation(start))

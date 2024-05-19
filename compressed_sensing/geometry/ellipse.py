@@ -289,6 +289,12 @@ class Ellipse:
         Returns:
             Tuple with two lines and the corresponding points of tangency
         """
+        # Return center if ellipse collapsed to a point
+        if abs(self.axes.x) < 1e-6 or abs(self.axes.y) < 1e-6: 
+            line = Line(a=-slope, b=1, c=self.center.x - slope * self.center.y)
+            pt = self.center
+            return tuple((line, pt), )
+            
         a, b = self._axes.x, self._axes.y
         angle = - np.deg2rad(self._angle)
         
